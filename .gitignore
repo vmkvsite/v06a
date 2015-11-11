@@ -1,0 +1,11 @@
+﻿*.suo
+*.db
+*.json
+*.sqlite
+*.user
+*.tlog
+*.obj
+*.ilk
+/Debug
+/Release
+/x64
