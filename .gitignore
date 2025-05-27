@@ -9,3 +9,6 @@
 /Debug
 /Release
 /x64
+.vs/
+*.vsidx
+*.sln.docstates
