@@ -1,18 +1,17 @@
 #include "main.h"
 #include "rc.h"
 
-int board_width = 8;
-int board_height = 8;
-COLORREF color1 = RGB(255, 255, 0); 
-COLORREF color2 = RGB(255, 255, 255);
+main_window* g_main_window = nullptr;
 
 int size_dialog::idd() const {
 	return IDD_SIZE;
 }
 
 bool size_dialog::on_init_dialog() {
-	set_int(IDC_EDIT1, board_width);
-	set_int(IDC_EDIT2, board_height);
+	if (g_main_window) {
+		set_int(IDC_EDIT1, g_main_window->get_board_width());
+		set_int(IDC_EDIT2, g_main_window->get_board_height());
+	}
 	return true;
 }
 
@@ -22,8 +21,10 @@ bool size_dialog::on_ok() {
 		int new_height = get_int(IDC_EDIT2);
 
 		if (new_width > 0 && new_height > 0 && new_width <= 20 && new_height <= 20) {
-			board_width = new_width;
-			board_height = new_height;
+			if (g_main_window) {
+				g_main_window->set_board_width(new_width);
+				g_main_window->set_board_height(new_height);
+			}
 			return true;
 		}
 	}
@@ -39,13 +40,13 @@ void main_window::on_paint(HDC hdc) {
 	int cell_width = (client_rect.right - client_rect.left) / board_width;
 	int cell_height = (client_rect.bottom - client_rect.top) / board_height;
 
+	HBRUSH brush1 = CreateSolidBrush(color1);
+	HBRUSH brush2 = CreateSolidBrush(color2);
+
 	for (int row = 0; row < board_height; row++) {
 		for (int col = 0; col < board_width; col++) {
-
-			COLORREF current_color = ((row + col) % 2 == 0) ? color1 : color2;
-
-			HBRUSH brush = CreateSolidBrush(current_color);
-			HBRUSH old_brush = (HBRUSH)SelectObject(hdc, brush);
+			HBRUSH current_brush = ((row + col) % 2 == 0) ? brush1 : brush2;
+			HBRUSH old_brush = (HBRUSH)SelectObject(hdc, current_brush);
 
 			RECT cell_rect;
 			cell_rect.left = col * cell_width;
@@ -53,12 +54,14 @@ void main_window::on_paint(HDC hdc) {
 			cell_rect.right = (col + 1) * cell_width;
 			cell_rect.bottom = (row + 1) * cell_height;
 
-			FillRect(hdc, &cell_rect, brush);
+			FillRect(hdc, &cell_rect, current_brush);
 
 			SelectObject(hdc, old_brush);
-			DeleteObject(brush);
 		}
 	}
+
+	DeleteObject(brush1);
+	DeleteObject(brush2);
 }
 
 void main_window::on_command(int id) {
@@ -98,10 +101,13 @@ void main_window::on_destroy() {
 	::PostQuitMessage(0);
 }
 
-int WINAPI WinMain(HINSTANCE hi, HINSTANCE, LPSTR, int)
+int WINAPI WinMain(_In_ HINSTANCE hi, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int)
 {
 	vsite::nwp::application app;
 	main_window wnd;
+	g_main_window = &wnd;
 	wnd.create(0, WS_OVERLAPPEDWINDOW | WS_VISIBLE, _T("NWP"), (UINT_PTR)LoadMenu(hi, MAKEINTRESOURCE(IDM_MAIN)));
-	return app.run();
+	int result = app.run();
+	g_main_window = nullptr;
+	return result;
 }
