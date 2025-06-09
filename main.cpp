@@ -1,17 +1,13 @@
 #include "main.h"
 #include "rc.h"
 
-main_window* g_main_window = nullptr;
-
 int size_dialog::idd() const {
 	return IDD_SIZE;
 }
 
 bool size_dialog::on_init_dialog() {
-	if (g_main_window) {
-		set_int(IDC_EDIT1, g_main_window->get_board_width());
-		set_int(IDC_EDIT2, g_main_window->get_board_height());
-	}
+	set_int(IDC_EDIT1, board_width);
+	set_int(IDC_EDIT2, board_height);
 	return true;
 }
 
@@ -21,10 +17,8 @@ bool size_dialog::on_ok() {
 		int new_height = get_int(IDC_EDIT2);
 
 		if (new_width > 0 && new_height > 0 && new_width <= 20 && new_height <= 20) {
-			if (g_main_window) {
-				g_main_window->set_board_width(new_width);
-				g_main_window->set_board_height(new_height);
-			}
+			board_width = new_width;
+			board_height = new_height;
 			return true;
 		}
 	}
@@ -69,7 +63,12 @@ void main_window::on_command(int id) {
 	case ID_SIZE:
 	{
 		size_dialog dlg;
+		dlg.board_width = board_width;
+		dlg.board_height = board_height;
+
 		if (dlg.do_modal(GetModuleHandle(NULL), *this) == IDOK) {
+			board_width = dlg.board_width;
+			board_height = dlg.board_height;
 			InvalidateRect(*this, NULL, TRUE);
 		}
 	}
@@ -105,9 +104,7 @@ int WINAPI WinMain(_In_ HINSTANCE hi, _In_opt_ HINSTANCE, _In_ LPSTR, _In_ int)
 {
 	vsite::nwp::application app;
 	main_window wnd;
-	g_main_window = &wnd;
 	wnd.create(0, WS_OVERLAPPEDWINDOW | WS_VISIBLE, _T("NWP"), (UINT_PTR)LoadMenu(hi, MAKEINTRESOURCE(IDM_MAIN)));
 	int result = app.run();
-	g_main_window = nullptr;
 	return result;
 }

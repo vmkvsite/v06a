@@ -4,6 +4,10 @@
 #include "nwpdlg.h"
 
 class size_dialog : public vsite::nwp::dialog {
+public:
+	int board_width = 8;
+	int board_height = 8;
+
 protected:
 	int idd() const override;
 	bool on_init_dialog() override;
